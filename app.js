@@ -14,11 +14,11 @@ var flash = require("connect-flash");
 app.use(flash());
 */
 // Mongoose Config
-/*
 var mongoose = require("mongoose");
-var dbUrl = process.env.ALFRED_DB_URL;
+//var dbUrl = process.env.ALFRED_DB_URL;
+var dbUrl = "mongodb://mauriciocoder:mlb310586@ds143980.mlab.com:43980/alfred-db";
 mongoose.connect(dbUrl);
-*/
+
 /*
 // Configuring passport
 var passport = require("passport");
@@ -41,6 +41,6 @@ app.use(require("./controllers")());
 
 var port = process.env.PORT || 8080;
 app.listen(port, function() {
-  //console.log("dbUrl = " + dbUrl);
+  console.log("dbUrl = " + dbUrl);
   console.log("alfred-webhook Listening on port " + port);
 });
