@@ -34,8 +34,8 @@ intent.breakfast_time = function (req, assistant) {
     event = event[0];
     var startTime = moment(event.startTime).format('LT');
     var endTime = moment(event.endTime).format('LT');
-    var message = 'The breakfast is served everyday from ' + startTime + ' to ' + endTime;
-    assistant.tell(message);    
+    var message = 'The breakfast is served everyday from ' + startTime + ' to ' + endTime + '. Would you like anything else?';
+    assistant.ask(message);    
   }.bind(null, assistant));
 }
 
@@ -43,8 +43,8 @@ intent.wifi_ask = function (req, assistant) {
   console.log('entrou em wifi_ask');
   Wifi.find({}, function(assistant, err, wifi) { 
     wifi = wifi[0];
-    var message = 'The wifi login is ' + wifi.login + ' and the password is ' + wifi.password;
-    assistant.tell(message);    
+    var message = 'The wifi login is ' + wifi.login + ' and the password is ' + wifi.password + '. Would you like anything else?';
+    assistant.ask(message);    
   }.bind(null, assistant));
 }
 
@@ -52,7 +52,7 @@ intent.complaint_order = function (req, assistant) {
   var complaint = new Complaint();
   complaint.userSpeech = req.body.result.resolvedQuery;
   complaint.save(function(err) {
-      assistant.tell('So, you have a complaint. Your message is registered and our staff will reach you as soon as possible');    
+      assistant.ask('So, you have a complaint. Your message is registered and our staff will reach you as soon as possible. Would you like anything else?');    
   });
 }
 
@@ -71,6 +71,6 @@ intent.food_order = function (req, assistant) {
   console.log('foods: ' + foods);
   fullOrder.foods = foods;
   fullOrder.save(function(err) {
-      assistant.tell('Sure. I will ask the kitchen to bring ' + foods + ' for you in your room.');    
+      assistant.ask('Sure. I will ask the kitchen to bring ' + foods + ' for you in your room. Would you like anything else?');    
   });
 }
