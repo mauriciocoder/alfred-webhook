@@ -1,73 +1,76 @@
-var express = require("express");
+var express = require('express');
+var moment = require('moment');
 var router = express.Router();
-var ApiAiAssistant = require("actions-on-google").ApiAiAssistant;
-var Food = require("../models/food");
-var Order = require("../models/order");
+var ApiAiAssistant = require('actions-on-google').ApiAiAssistant;
+//var Food = require('../models/food');
+var FullOrder = require('../models/fullorder');
+var Event = require('../models/event');
+var Wifi = require('../models/wifi');
+var Complaint = require('../models/complaint');
 
 module.exports = function() {
-  router.post("/", function(req, res) {
+  router.post('/', function(req, res) {
     var assistant = new ApiAiAssistant({request: req, response: res});
     // check autentication
     // fulfill action business logic
     function responseHandler (assistant) {
-      var intent = req.body.result.metadata.intentName;
-      console.log("intent invocada: " + intent);
-      switch (intent) {
-        case "food.order": 
-          orderFood(req, assistant);
-          break;
-        case "menu.show":
-          showMenu(assistant);
-          break;
-      }
+      var intentName = req.body.result.metadata.intentName;
+      console.log('intent invocada: ' + intentName);
+      intent[intentName](req, assistant);
     };
     assistant.handleRequest(responseHandler);
   });
   
-  router.post("/newfood", function(req, res) {
-    var food = new Food();
-    food.name = "double cheeseburguer"
-    food.save(function(err) {
-      return;
-    });
-  });
-  
   /*
-  router.use("/register", require("./register")(passport));
+  router.use('/register', require('./register')(passport));
   */
   return router;
 }
 
-var showMenu = function(assistant) {
-  console.log("entrou em showMenu");
-  Food.find({}, function(assistant, err, foods) { 
-    var foodsString = foods.map(function(food, i) {
-        var s = "";
-        if (i > 0) {
-          s += ",";
-        }
-        s += food.name;
-        return s;
-    })
-    assistant.tell("Sure. In our menu we have " + foodsString);    
+var intent = {};
+intent.breakfast_time = function (req, assistant) {
+  console.log('entrou em breakfast_time');
+  Event.find({type: 'breakfast'}, function(assistant, err, event) { 
+    event = event[0];
+    var startTime = moment(event.startTime).format('LT');
+    var endTime = moment(event.endTime).format('LT');
+    var message = 'The breakfast is served everyday from ' + startTime + ' to ' + endTime;
+    assistant.tell(message);    
   }.bind(null, assistant));
 }
 
-var orderFood = function(req, assistant) {
-  console.log("entrou em orderFood");
-  var foodOrdered = req.body.result.parameters.food;
-  console.log("food pedida: " + foodOrdered);
+intent.wifi_ask = function (req, assistant) {
+  console.log('entrou em wifi_ask');
+  Wifi.find({}, function(assistant, err, wifi) { 
+    wifi = wifi[0];
+    var message = 'The wifi login is ' + wifi.login + ' and the password is ' + wifi.password;
+    assistant.tell(message);    
+  }.bind(null, assistant));
+}
+
+intent.complaint_order = function (req, assistant) {
+  var complaint = new Complaint();
+  complaint.userSpeech = req.body.result.resolvedQuery;
+  complaint.save(function(err) {
+      assistant.tell('So, you have a complaint. Your message is registered and our staff will reach you as soon as possible');    
+  });
+}
+
+intent.food_order = function (req, assistant) {
+  var fullOrder = new FullOrder();
   var userSpeech = req.body.result.resolvedQuery;
-  console.log("userSpeech: " + userSpeech);
+  console.log('userSpeech: ' + userSpeech);
+  fullOrder.userSpeech = userSpeech;
   var timestamp = req.body.timestamp;
-  console.log("timestamp: " + timestamp);
-  
-  var order = new Order();
-    order.food = foodOrdered;
-    order.timestamp = timestamp;
-    order.userSpeech = userSpeech;
-    order.save(function(err) {
-      assistant.tell("Thanks for rodering, your " + foodOrdered + " will be served in your room in under 20 minutes");    
-    });
-  return;
+  console.log('timestamp: ' + timestamp);
+  fullOrder.timestamp = timestamp;
+  var foods = [];
+  foods.push(req.body.result.parameters.menu_food);
+  foods.push(req.body.result.parameters.menu_food1);
+  foods.push(req.body.result.parameters.menu_food2);
+  console.log('foods: ' + foods);
+  fullOrder.foods = foods;
+  fullOrder.save(function(err) {
+      assistant.tell('Sure. I will ask the kitchen to bring ' + foods + ' for you in your room.');    
+  });
 }
