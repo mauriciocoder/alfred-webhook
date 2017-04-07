@@ -64,12 +64,25 @@ intent.food_order = function (req, assistant) {
   console.log('timestamp: ' + timestamp);
   order.timestamp = timestamp;
   var foods = [];
-  foods.push(req.body.result.parameters.menu_food);
-  foods.push(req.body.result.parameters.menu_food1);
-  foods.push(req.body.result.parameters.menu_food2);
+  var food = req.body.result.parameters.menu_food;
+  var food1 = req.body.result.parameters.menu_food1;
+  var food2 = req.body.result.parameters.menu_food2;
+  add(foods, food, food1, food2);
   console.log('foods: ' + foods);
   order.foods = foods;
   order.save(function(err) {
       assistant.ask('Sure. I will ask the kitchen to bring ' + foods + ' for you in your room. Would you like anything else?');    
   });
+}
+
+function add() {
+  console.log('entrou no add');
+  console.log('arguments = ' + JSON.stringify(arguments));
+  var foodsArr = arguments[0];
+  for (var i = 1; i < arguments.length; i++) {
+    var food = arguments[i];
+    if (food.length > 0) {
+      foodsArr.push(food);
+    }
+  }
 }
