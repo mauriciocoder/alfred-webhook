@@ -50,6 +50,9 @@ intent.wifi_ask = function (req, assistant) {
 intent.complaint_order = function (req, assistant) {
   var complaint = new Complaint();
   complaint.userSpeech = req.body.result.resolvedQuery;
+  var timestamp = req.body.timestamp;
+  console.log('timestamp: ' + timestamp);
+  complaint.timestamp = timestamp;
   complaint.save(function(err) {
       assistant.ask('So, you have a complaint. Your message is registered and our staff will reach you as soon as possible. Would you like anything else?');    
   });
