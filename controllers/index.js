@@ -2,8 +2,7 @@ var express = require('express');
 var moment = require('moment');
 var router = express.Router();
 var ApiAiAssistant = require('actions-on-google').ApiAiAssistant;
-//var Food = require('../models/food');
-var FullOrder = require('../models/fullorder');
+var Order = require('../models/order');
 var Event = require('../models/event');
 var Wifi = require('../models/wifi');
 var Complaint = require('../models/complaint');
@@ -57,20 +56,20 @@ intent.complaint_order = function (req, assistant) {
 }
 
 intent.food_order = function (req, assistant) {
-  var fullOrder = new FullOrder();
+  var order = new Order();
   var userSpeech = req.body.result.resolvedQuery;
   console.log('userSpeech: ' + userSpeech);
-  fullOrder.userSpeech = userSpeech;
+  order.userSpeech = userSpeech;
   var timestamp = req.body.timestamp;
   console.log('timestamp: ' + timestamp);
-  fullOrder.timestamp = timestamp;
+  order.timestamp = timestamp;
   var foods = [];
   foods.push(req.body.result.parameters.menu_food);
   foods.push(req.body.result.parameters.menu_food1);
   foods.push(req.body.result.parameters.menu_food2);
   console.log('foods: ' + foods);
-  fullOrder.foods = foods;
-  fullOrder.save(function(err) {
+  order.foods = foods;
+  order.save(function(err) {
       assistant.ask('Sure. I will ask the kitchen to bring ' + foods + ' for you in your room. Would you like anything else?');    
   });
 }
