@@ -7,6 +7,7 @@ var Event = require('../models/event');
 var Wifi = require('../models/wifi');
 var Complaint = require('../models/complaint');
 var Food = require('../models/food');
+var Fee = require('../models/fee');
 
 module.exports = function() {
   router.post('/', function(req, res) {
@@ -79,6 +80,45 @@ intent.food_order = function (req, assistant) {
     order.save(function(err) {
       assistant.ask('Sure. I will ask the kitchen to bring ' + order.foods + ' for you in your room. Would you like anything else?');    
     });
+  }.bind(null, assistant));
+}
+
+intent.checkout = function (req, assistant) {
+  var userSpeech = req.body.result.resolvedQuery;
+  var timestamp = req.body.timestamp;
+  var checkoutAction = req.body.result.parameters.checkout_verb;
+  Event.find({type: 'checkout'}, function(assistant, err, event) { 
+    event = event[0];
+    var startTime = moment(event.startTime).format('LT');
+    var endTime = moment(event.endTime).format('LT');
+    if ('proceed'.toUpperCase() === checkoutAction.toUpperCase()) {
+      Fee.find({}, function(assistant, err, fee) {
+        var checkoutTimeText = moment(timestamp).format('LT');
+        var checkoutTime = moment(checkoutTimeText, 'h:mm a');
+        startTime = moment(startTime, 'h:mm a');
+        endTime = moment(endTime, 'h:mm a');
+        var message = 'Sure sir. Your checkout was done at ' + checkoutTimeText + '. By doing so, your checkout is ';
+        var multiplier = 1;
+        if (checkoutTime.isBefore(startTime)) {
+          message += 'a regular checkout.';
+        } else if (checkoutTime.isBefore(endTime)) {
+          message += 'a late checkout.';
+          multiplier = 1.5;
+        } else {
+          message += 'an after late checkout.';
+          multiplier = 2;
+        }
+        var price = fee[0].price * multiplier;
+        message += 'Your total fee is ' + price + ' dolares. Now, the Hotels Front Desk will get in touch with you in just a while';
+        assistant.ask(message);
+      }.bind(null, assistant)); 
+    } else {
+      var message = 'I will tell you how checkout works in our hotel. We have two types of checkouts: regular checkout and late checkout.'
+        + 'Regular checkout is the checkout confirmed before ' + startTime + '. '
+        + 'Between ' + startTime + ' to ' + endTime + ' a half-day room charge is incurred for what we call late check-out. '
+        + ' A full day room charge is incurred for check-out after ' + endTime + '.';
+      assistant.ask(message);    
+    }
   }.bind(null, assistant));
 }
 
