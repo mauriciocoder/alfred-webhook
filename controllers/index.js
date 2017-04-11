@@ -6,6 +6,7 @@ var Order = require('../models/order');
 var Event = require('../models/event');
 var Wifi = require('../models/wifi');
 var Complaint = require('../models/complaint');
+var Food = require('../models/food');
 
 module.exports = function() {
   router.post('/', function(req, res) {
@@ -61,26 +62,27 @@ intent.complaint_order = function (req, assistant) {
 intent.food_order = function (req, assistant) {
   var order = new Order();
   var userSpeech = req.body.result.resolvedQuery;
-  console.log('userSpeech: ' + userSpeech);
   order.userSpeech = userSpeech;
   var timestamp = req.body.timestamp;
-  console.log('timestamp: ' + timestamp);
   order.timestamp = timestamp;
   var foods = [];
   var food = req.body.result.parameters.menu_food;
   var food1 = req.body.result.parameters.menu_food1;
   var food2 = req.body.result.parameters.menu_food2;
   add(foods, food, food1, food2);
-  console.log('foods: ' + foods);
   order.foods = foods;
-  order.save(function(err) {
-      assistant.ask('Sure. I will ask the kitchen to bring ' + foods + ' for you in your room. Would you like anything else?');    
-  });
+  Food.find({ name : { $in : order.foods } }, function(assistant, err, foods) {
+    var totalPrice = foods.reduce(function(acc, food) {
+      return acc + food.price;
+    }, 0); 
+    order.price = totalPrice;
+    order.save(function(err) {
+      assistant.ask('Sure. I will ask the kitchen to bring ' + order.foods + ' for you in your room. Would you like anything else?');    
+    });
+  }.bind(null, assistant));
 }
 
 function add() {
-  console.log('entrou no add');
-  console.log('arguments = ' + JSON.stringify(arguments));
   var foodsArr = arguments[0];
   for (var i = 1; i < arguments.length; i++) {
     var food = arguments[i];
