@@ -31,30 +31,27 @@ module.exports = function() {
 
 var intent = {};
 intent.breakfast_time = function (req, assistant) {
-  console.log('entrou em breakfast_time');
-  Event.find({type: 'breakfast'}, function(assistant, err, event) { 
+  Event.find({type: 'breakfast'}, function(err, event) { 
     event = event[0];
     var startTime = moment(event.startTime).format('LT');
     var endTime = moment(event.endTime).format('LT');
     var message = 'The breakfast is served everyday from ' + startTime + ' to ' + endTime + '. Would you like anything else?';
     assistant.ask(message);    
-  }.bind(null, assistant));
+  });
 }
 
 intent.wifi_ask = function (req, assistant) {
-  console.log('entrou em wifi_ask');
-  Wifi.find({}, function(assistant, err, wifi) { 
+  Wifi.find({}, function(err, wifi) { 
     wifi = wifi[0];
     var message = 'The wifi login is ' + wifi.login + ' and the password is ' + wifi.password + '. Would you like anything else?';
     assistant.ask(message);    
-  }.bind(null, assistant));
+  });
 }
 
 intent.complaint_order = function (req, assistant) {
   var complaint = new Complaint();
   complaint.userSpeech = req.body.result.resolvedQuery;
   var timestamp = req.body.timestamp;
-  console.log('timestamp: ' + timestamp);
   complaint.timestamp = timestamp;
   complaint.save(function(err) {
       assistant.ask('So, you have a complaint. Your message is registered and our staff will reach you as soon as possible. Would you like anything else?');    
@@ -73,7 +70,7 @@ intent.food_order = function (req, assistant) {
   var food2 = req.body.result.parameters.menu_food2;
   add(foods, food, food1, food2);
   order.foods = foods;
-  Food.find({ name : { $in : order.foods } }, function(assistant, err, foods) {
+  Food.find({ name : { $in : order.foods } }, function(err, foods) {
     var totalPrice = foods.reduce(function(acc, food) {
       return acc + food.price;
     }, 0); 
@@ -81,19 +78,19 @@ intent.food_order = function (req, assistant) {
     order.save(function(err) {
       assistant.ask('Sure. I will ask the kitchen to bring ' + order.foods + ' for you in your room. Would you like anything else?');    
     });
-  }.bind(null, assistant));
+  });
 }
 
 intent.checkout = function (req, assistant) {
   var userSpeech = req.body.result.resolvedQuery;
   var timestamp = req.body.timestamp;
   var checkoutAction = req.body.result.parameters.checkout_verb;
-  Event.find({type: 'checkout'}, function(assistant, err, event) { 
+  Event.find({type: 'checkout'}, function(err, event) { 
     event = event[0];
     var startTime = moment(event.startTime).format('LT');
     var endTime = moment(event.endTime).format('LT');
     if ('proceed'.toUpperCase() === checkoutAction.toUpperCase()) {
-      Fee.find({}, function(assistant, err, fee) {
+      Fee.find({}, function(err, fee) {
         var checkoutTimeText = moment(timestamp).format('LT');
         var checkoutTime = moment(checkoutTimeText, 'h:mm a');
         startTime = moment(startTime, 'h:mm a');
@@ -110,13 +107,13 @@ intent.checkout = function (req, assistant) {
           multiplier = 2;
         }
         var totalStayFee = fee[0].price * multiplier;
-        Order.find({}, function(assistant, totalStayFee, err, orders) {
+        Order.find({}, function(err, orders) {
           var totalOrdersFee = orders.reduce(function(acc, order) {
             return acc + order.price;
           }, 0);
           var totalFee = totalOrdersFee + totalStayFee;
           var checkout = new Checkout();
-          checkout.timestamp = timestamp; // TODO: Verificar escopo do bind
+          checkout.timestamp = timestamp;
           checkout.totalStayFee = totalStayFee;
           checkout.totalOrdersFee = totalOrdersFee;
           checkout.userSpeech = userSpeech;
@@ -124,8 +121,8 @@ intent.checkout = function (req, assistant) {
             message += 'Your stay fee is ' + totalStayFee + ' dolares. Your orders fee is ' + totalOrdersFee + ' dolares. Summing up you have a total fee of ' + totalFee + ' dolares. Now, the Hotels Front Desk will get in touch with you in just a while';
             assistant.ask(message);
           });
-        }.bind(null, assistant, totalStayFee));
-      }.bind(null, assistant)); 
+        });
+      }); 
     } else {
       var message = 'I will tell you how checkout works in our hotel. We have two types of checkouts: regular checkout and late checkout.'
         + 'Regular checkout is the checkout confirmed before ' + startTime + '. '
@@ -133,7 +130,7 @@ intent.checkout = function (req, assistant) {
         + ' A full day room charge is incurred for check-out after ' + endTime + '.';
       assistant.ask(message);    
     }
-  }.bind(null, assistant));
+  });
 }
 
 function add() {
