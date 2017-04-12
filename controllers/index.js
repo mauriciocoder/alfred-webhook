@@ -8,6 +8,7 @@ var Wifi = require('../models/wifi');
 var Complaint = require('../models/complaint');
 var Food = require('../models/food');
 var Fee = require('../models/fee');
+var Checkout = require('../models/checkout');
 
 module.exports = function() {
   router.post('/', function(req, res) {
@@ -108,9 +109,22 @@ intent.checkout = function (req, assistant) {
           message += 'an after late checkout.';
           multiplier = 2;
         }
-        var price = fee[0].price * multiplier;
-        message += 'Your total fee is ' + price + ' dolares. Now, the Hotels Front Desk will get in touch with you in just a while';
-        assistant.ask(message);
+        var totalStayFee = fee[0].price * multiplier;
+        Order.find({}, function(assistant, totalStayFee, err, orders) {
+          var totalOrdersFee = orders.reduce(function(acc, order) {
+            return acc + order.price;
+          }, 0);
+          var totalFee = totalOrdersFee + totalStayFee;
+          var checkout = new Checkout();
+          checkout.timestamp = timestamp; // TODO: Verificar escopo do bind
+          checkout.totalStayFee = totalStayFee;
+          checkout.totalOrdersFee = totalOrdersFee;
+          checkout.userSpeech = userSpeech;
+          checkout.save(function(err) {
+            message += 'Your stay fee is ' + totalStayFee + ' dolares. Your orders fee is ' + totalOrdersFee + ' dolares. Summing up you have a total fee of ' + totalFee + ' dolares. Now, the Hotels Front Desk will get in touch with you in just a while';
+            assistant.ask(message);
+          });
+        }.bind(null, assistant, totalStayFee));
       }.bind(null, assistant)); 
     } else {
       var message = 'I will tell you how checkout works in our hotel. We have two types of checkouts: regular checkout and late checkout.'
