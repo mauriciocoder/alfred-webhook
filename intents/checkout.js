@@ -41,7 +41,7 @@ module.exports = function(req, assistant) {
           checkout.totalOrdersFee = totalOrdersFee;
           checkout.userSpeech = userSpeech;
           checkout.save(function(err) {
-            message += 'Your stay fee is ' + totalStayFee + ' dolares. Your orders fee is ' + totalOrdersFee + ' dolares. Summing up you have a total fee of ' + totalFee + ' dolares. Now, the Hotels Front Desk will get in touch with you in just a while';
+            message += 'Your stay fee is ' + totalStayFee + ' dolars. Your orders fee is ' + totalOrdersFee + ' dolars. Summing up you have a total fee of ' + totalFee + ' dolars. Now, the Hotels Front Desk will get in touch with you in just a while';
             assistant.ask(message);
           });
         });
@@ -49,7 +49,7 @@ module.exports = function(req, assistant) {
     } else {
       var message = 'I will tell you how checkout works in our hotel. We have two types of checkouts: regular checkout and late checkout.'
         + 'Regular checkout is the checkout confirmed before ' + startTime + '. '
-        + 'Between ' + startTime + ' to ' + endTime + ' a half-day room charge is incurred for what we call late check-out. '
+        + 'Between ' + startTime + ' to ' + endTime + ' a half-day room charge is incurred, for what we call late check-out. '
         + ' A full day room charge is incurred for check-out after ' + endTime + '.';
       assistant.ask(message);    
     }
